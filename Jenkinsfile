@@ -1,23 +1,27 @@
 pipeline {
     agent any
 stages {
-        stage('Clone Repository') {
+    stage('Clone') {
+        steps {
+            git url: 'https://github.com/johnmoses/jenkins-docker-compose-flask', branch: 'main'
+        }
+    }
+    stage('Build') {
+                steps {
+                    sh 'docker-compose build'
+                }
+            }
+    stage('Test') {
             steps {
-                git url: 'https://github.com/johnmoses/jenkins-docker-flask', branch: 'main'
+                sh 'docker-compose up -d'
+                sh 'sleep 5'
+                sh 'curl http://localhost:5001 || true'
+                sh 'docker-compose down'
             }
         }
-stage('Build Docker Image') {
+    stage('Deploy') {
             steps {
-                sh 'docker build -t flask-api .'
-            }
-        }
-stage('Run Docker Container') {
-            steps {
-                sh '''
-                docker stop flask-api || true
-                docker rm flask-api || true
-                docker run -d -p 5001:5001 --name flask-api flask-api
-                '''
+                sh 'docker-compose up -d'
             }
         }
     }
